@@ -11,4 +11,5 @@ require (
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f // indirect
 	golang.org/x/text v0.4.0 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
+	rogchap.com/v8go v0.9.0 // indirect
 )

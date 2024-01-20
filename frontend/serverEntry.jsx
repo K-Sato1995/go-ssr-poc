@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOMServer from 'react-dom/server';
+import { renderToString } from "react-dom/server.browser";
 
 function App(props) {
     return (
@@ -7,6 +7,9 @@ function App(props) {
     );
 }
 
-export function renderApp(props) {
-    return ReactDOMServer.renderToString(<App {...props} />);
+function renderApp(props) {
+    return renderToString(<App {...props} />);
 }
+
+// Attach renderApp to the global object
+globalThis.renderApp = renderApp;
