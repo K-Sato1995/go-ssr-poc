@@ -27,18 +27,12 @@ const htmlTemplate = `
 </html>
 `
 
+type PageData struct {
+	RenderedContent template.HTML
+}
+
 var serverRenderFunction = `renderToString(<App {...props} />);`
 
-func GenerateServerBuildContents(imports []string, filePath string, useLayout bool) (string, error) {
-	imports = append(imports, `import { renderToString } from "react-dom/server.browser";`)
-	params := map[string]interface{}{
-		"Imports":            imports,
-		"FilePath":           filePath,
-		"RenderFunction":     serverRenderFunction,
-		"SuppressConsoleLog": true,
-	}
-	return buildWithTemplate(baseTemplate, params)
-}
 func main() {
 	result := esbuild.Build(esbuild.BuildOptions{
 		EntryPoints: []string{"./frontend/serverEntry.jsx"},
@@ -82,17 +76,18 @@ func main() {
 		log.Fatal("Error parsing template:", err)
 	}
 	// Define an HTTP handler
+
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		data := struct {
-			RenderedContent string
-		}{
-			RenderedContent: renderedHTML,
+		w.Header().Set("Content-Type", "text/html")
+		data := PageData{
+			RenderedContent: template.HTML(renderedHTML),
 		}
 		err := tmpl.Execute(w, data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
+
 	// Start the HTTP server
 	fmt.Println("Server is running at http://localhost:3002")
 	log.Fatal(http.ListenAndServe(":3002", nil))
