@@ -96,7 +96,7 @@ func main() {
 		log.Fatal("Error parsing template:", err)
 	}
 	initialProps := InitialProps{
-		Name: "John",
+		Name: "GoでReactをSSRする",
 	}
 	jsonProps, err := json.Marshal(initialProps)
 	clientBundleString := string(clientResult.OutputFiles[0].Contents)
