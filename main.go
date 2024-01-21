@@ -43,7 +43,8 @@ type PageData struct {
 }
 
 type InitialProps struct {
-	Name string
+	Name          string
+	InitialNumber int
 }
 
 func buildBackend() string {
@@ -100,7 +101,8 @@ func main() {
 
 	// backendから渡すprops
 	initialProps := InitialProps{
-		Name: "GoでReactをSSRする",
+		Name:          "GoでReactをSSRする",
+		InitialNumber: 100,
 	}
 	jsonProps, err := json.Marshal(initialProps)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
