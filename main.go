@@ -51,7 +51,7 @@ func buildBackend() string {
 		Write:       false,
 		Outdir:      "/",
 		Format:      esbuild.FormatIIFE,
-		Platform:    esbuild.PlatformNode,
+		Platform:    esbuild.PlatformBrowser,
 		Target:      esbuild.ES2015,
 		Banner: map[string]string{
 			"js": textEncoderPolyfill + processPolyfill + consolePolyfill,
