@@ -26,12 +26,8 @@ const htmlTemplate = `
 <body>
     <div id="app">{{.RenderedContent}}</div>
 	<script type="module">
-	try{
 	  {{ .JS }}
-	} catch (e) {
-	  showError(e.stack)
-	}
-  </script>
+	</script>
 	<script>window.APP_PROPS = {{.InitialProps}};</script>
 </body>
 </html>
