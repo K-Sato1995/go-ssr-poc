@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"html/template"
 	"log"
@@ -23,12 +24,26 @@ const htmlTemplate = `
 </head>
 <body>
     <div id="app">{{.RenderedContent}}</div>
+	<script type="module">
+	try{
+	  {{ .JS }}
+	} catch (e) {
+	  showError(e.stack)
+	}
+  </script>
+	<script>window.APP_PROPS = {{.InitialProps}};</script>
 </body>
 </html>
 `
 
 type PageData struct {
 	RenderedContent template.HTML
+	InitialProps    template.JS
+	JS              template.JS
+}
+
+type InitialProps struct {
+	Name string
 }
 
 var serverRenderFunction = `renderToString(<App {...props} />);`
@@ -49,6 +64,12 @@ func main() {
 			".jsx": esbuild.LoaderJSX,
 		},
 	})
+	clientResult := esbuild.Build(esbuild.BuildOptions{
+		EntryPoints: []string{"./frontend/clientEntry.jsx"},
+		Bundle:      true,
+		Write:       true,
+	})
+
 	s := fmt.Sprintf("%s", result.OutputFiles[0].Contents)
 	fmt.Println(s)
 	if len(result.Errors) > 0 {
@@ -70,17 +91,22 @@ func main() {
 
 	renderedHTML := val.String()
 
-	// Create a template with the rendered HTML
 	tmpl, err := template.New("webpage").Parse(htmlTemplate)
 	if err != nil {
 		log.Fatal("Error parsing template:", err)
 	}
-	// Define an HTTP handler
+	initialProps := InitialProps{
+		Name: "John",
+	}
+	jsonProps, err := json.Marshal(initialProps)
+	clientBundleString := string(clientResult.OutputFiles[0].Contents)
 
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		data := PageData{
 			RenderedContent: template.HTML(renderedHTML),
+			InitialProps:    template.JS(jsonProps),
+			JS:              template.JS(clientBundleString), //
 		}
 		err := tmpl.Execute(w, data)
 		if err != nil {

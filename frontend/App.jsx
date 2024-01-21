@@ -1,11 +1,14 @@
 import React from "react";
-import { renderToString } from "react-dom/server.browser";
-function App() {
-  return (
-    <div className="home">
-      <h1>Go + React</h1>
-    </div>
-  );
+
+function App(props) {
+    console.log("APP rendered", props);
+    const [count, setCount] = React.useState(0);
+    return (
+        <div>Hello World
+        {count}
+            <button onClick={() => setCount(count + 1)}>Click me</button>
+        </div>
+    );
 }
 
 export default App;

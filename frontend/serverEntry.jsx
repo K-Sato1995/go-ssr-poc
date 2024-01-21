@@ -1,15 +1,6 @@
 import React from 'react';
 import { renderToString } from "react-dom/server.browser";
-
-function App(props) {
-    const [count, setCount] = React.useState(0);
-    return (
-        <div>Hello World
-        {count}
-            <button onClick={() => setCount(count + 1)}>Click me</button>
-        </div>
-    );
-}
+import App from './App'; // Adjust the import path as necessary
 
 function renderApp(props) {
     return renderToString(<App {...props} />);
