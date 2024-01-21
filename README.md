@@ -6,7 +6,7 @@
 
 just a poc for ssring react components using Go.
 
-## How 
+## How to run it
 
 run the command below and go to `http://localhost:3002`.
 
