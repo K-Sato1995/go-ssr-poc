@@ -46,9 +46,7 @@ type InitialProps struct {
 	Name string
 }
 
-var serverRenderFunction = `renderToString(<App {...props} />);`
-
-func main() {
+func buildBackend() string {
 	result := esbuild.Build(esbuild.BuildOptions{
 		EntryPoints: []string{"./frontend/serverEntry.jsx"},
 		Bundle:      true,
@@ -64,58 +62,59 @@ func main() {
 			".jsx": esbuild.LoaderJSX,
 		},
 	})
+	script := fmt.Sprintf("%s", result.OutputFiles[0].Contents)
+	return script
+}
+
+func buildClient() string {
 	clientResult := esbuild.Build(esbuild.BuildOptions{
 		EntryPoints: []string{"./frontend/clientEntry.jsx"},
 		Bundle:      true,
 		Write:       true,
 	})
+	clientBundleString := string(clientResult.OutputFiles[0].Contents)
+	return clientBundleString
+}
 
-	s := fmt.Sprintf("%s", result.OutputFiles[0].Contents)
-	fmt.Println(s)
-	if len(result.Errors) > 0 {
-		log.Fatalf("Failed to build: %v", result.Errors)
-	}
-	bundledScript := string(result.OutputFiles[0].Contents)
+func main() {
+	// reactをSSRするためのバンドルを作成
+	backendBundle := buildBackend()
+	// reactをhydrateするためのバンドルを作成
+	clientBundle := buildClient()
+
 	ctx := v8.NewContext(nil)
-
-	_, err := ctx.RunScript(bundledScript, "bundle.js")
+	_, err := ctx.RunScript(backendBundle, "bundle.js")
 	if err != nil {
 		log.Fatalf("Failed to evaluate bundled script: %v", err)
 	}
-
 	val, err := ctx.RunScript("renderApp()", "render.js")
-
 	if err != nil {
 		log.Fatalf("Failed to render React component: %v", err)
 	}
-
 	renderedHTML := val.String()
 
 	tmpl, err := template.New("webpage").Parse(htmlTemplate)
 	if err != nil {
 		log.Fatal("Error parsing template:", err)
 	}
+
+	// backendから渡すprops
 	initialProps := InitialProps{
 		Name: "GoでReactをSSRする",
 	}
 	jsonProps, err := json.Marshal(initialProps)
-	clientBundleString := string(clientResult.OutputFiles[0].Contents)
-
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "text/html")
 		data := PageData{
 			RenderedContent: template.HTML(renderedHTML),
 			InitialProps:    template.JS(jsonProps),
-			JS:              template.JS(clientBundleString), //
+			JS:              template.JS(clientBundle),
 		}
 		err := tmpl.Execute(w, data)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}
 	})
-
-	// Start the HTTP server
 	fmt.Println("Server is running at http://localhost:3002")
 	log.Fatal(http.ListenAndServe(":3002", nil))
-
 }
